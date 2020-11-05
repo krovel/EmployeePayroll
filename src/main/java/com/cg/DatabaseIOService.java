@@ -13,9 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-import com.cg.EmployeePayrollData;
-
 public class DatabaseIOService {
 
 	private PreparedStatement employeePayrollDataStatement;
@@ -89,7 +86,11 @@ public class DatabaseIOService {
 	}
 
 	public Map<String, Double> readAverageSalaryByGender() throws DBException {
-		String sql = "select gender, avg(salary) as average_salary from employee_payroll group by gender;";
+		String sql = "select employee.gender as gender, avg(payroll.basic_pay) as average_salary "
+				+ "from employee "
+				+ "inner join payroll "
+				+ "on employee.id = payroll.employee_id "
+				+ "group by employee.gender;";
 		Map<String, Double> genderToAverageSalaryMap = new HashMap<>();
 		try (Connection connection = this.establishConnection()) {
 			System.out.println("Connection is successfull!!! " + connection);

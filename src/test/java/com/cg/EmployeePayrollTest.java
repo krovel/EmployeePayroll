@@ -54,14 +54,14 @@ public class EmployeePayrollTest {
 		try {
 			EmployeePayrollService payrollServiceObject = new EmployeePayrollService();
 			payrollServiceObject.readEmployeeData(IOService.DB_IO);
-			payrollServiceObject.updateEmployeeSalary("Terisa", 3000000.0);
+			payrollServiceObject.updateEmployeeSalary("Teresa", 3000000.0);
 			boolean result = payrollServiceObject.checkEmployeePayrollInSyncWithDB("Teresa");
 			Assert.assertTrue(result);
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	@Test
 	public void givenDateRange_WhenRetrieved_ShouldMatchEmployeeCount() {
 		EmployeePayrollService payrollServiceObject = new EmployeePayrollService();
@@ -77,7 +77,7 @@ public class EmployeePayrollTest {
 		EmployeePayrollService payrollServiceObject = new EmployeePayrollService();
 		payrollServiceObject.readEmployeeData(IOService.DB_IO);
 		Map<String, Double> averageSalaryByGender = payrollServiceObject.readAverageSalaryByGender(IOService.DB_IO);
-		Assert.assertTrue(averageSalaryByGender.get("M").equals(2000000.0) && 
+		Assert.assertTrue(averageSalaryByGender.get("M").equals(1500000.0) && 
 						  averageSalaryByGender.get("F").equals(3000000.0));
 	}
 
