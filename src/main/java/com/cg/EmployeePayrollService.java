@@ -3,6 +3,7 @@
  */
 package com.cg;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -53,6 +54,17 @@ public class EmployeePayrollService {
 		}
 	}
 
+	public List<EmployeePayrollData> readEmployeeDataForDateRange(IOService ioType, LocalDate startDate,LocalDate endDate) {
+		if (ioType.equals(IOService.DB_IO)) {
+			try {
+				return employeePayrollDBService.readEmployeeDataForDateRange(startDate, endDate);
+			} catch (DBException e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
+
 	public void updateEmployeeSalary(String name, double salary) throws DBException {
 		int result = employeePayrollDBService.updateEmployeeData(name, salary);
 		if(result == 0)
@@ -72,7 +84,7 @@ public class EmployeePayrollService {
 	}
 
 	public boolean checkEmployeePayrollInSyncWithDB(String name) throws DBException {
-		List<EmployeePayrollData> employeePayrollDataList = employeePayrollDBService.getEmplyoeePayrollData(name);
+		List<EmployeePayrollData> employeePayrollDataList = employeePayrollDBService.getEmplyoeePayrollDataUsingName(name);
 		return employeePayrollDataList.get(0).equals(getEmployeePayrollData(name));
 	}
 

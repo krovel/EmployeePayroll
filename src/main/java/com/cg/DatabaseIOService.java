@@ -1,9 +1,10 @@
 package com.cg;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
@@ -11,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DatabaseIOService {
-	
+
 	private PreparedStatement employeePayrollDataStatement;
 	private static DatabaseIOService employeeDBService;
 
@@ -27,11 +28,11 @@ public class DatabaseIOService {
 	private Connection establishConnection() throws SQLException {
 		String jdbcURL = "jdbc:mysql://localhost:3306/payroll_service";
 		String userName = "root";
-		String password = "First12@";
+		String password = "Matrixkashif@1";
 		System.out.println("Establishing connection to database : " + jdbcURL);
 		return DriverManager.getConnection(jdbcURL, userName, password);
 	}
-	
+
 	private void prepareStatementForEmployeeData() throws DBException {
 		String sql = "select * from employee_payroll where name = ?";
 		try {
@@ -45,35 +46,43 @@ public class DatabaseIOService {
 
 	public List<EmployeePayrollData> readData() throws DBException {
 		String sql = "select * from employee_payroll;";
-		List<EmployeePayrollData> employeePayrollList = null;
-		try (Connection connection = this.establishConnection()) {
-			System.out.println("Connection is successfull!!! " + connection);
-			Statement statement = connection.createStatement();
-			ResultSet resultSet = statement.executeQuery(sql);
-			employeePayrollList = this.getEmplyoeePayrollData(resultSet);
-
-		} catch (SQLException e) {
-			throw new DBException("Cannot establish connection",DBException.ExceptionType.CONNECTION_FAIL);
-		}
-		return employeePayrollList;
+		return this.getEmplyoeePayrollDataUsingDB(sql);
 	}
 
-	public List<EmployeePayrollData> getEmplyoeePayrollData(String name) throws DBException {
+	public List<EmployeePayrollData> getEmplyoeePayrollDataUsingName(String name) throws DBException {
 		List<EmployeePayrollData> employeePayrollList = null;
 		if(this.employeePayrollDataStatement == null)
 			this.prepareStatementForEmployeeData();
-
 		try {
 			employeePayrollDataStatement.setString(1, name);
 			ResultSet resultSet = employeePayrollDataStatement.executeQuery();
-			employeePayrollList = this.getEmplyoeePayrollData(resultSet);			
+			employeePayrollList = this.getEmplyoeePayrollDataUsingResultSet(resultSet);			
 		} catch (SQLException e) {
 			throw new DBException("Cannot execute query", DBException.ExceptionType.SQL_ERROR);
 		}
 		return employeePayrollList;
 	}
 
-	private List<EmployeePayrollData> getEmplyoeePayrollData(ResultSet resultSet) throws DBException {
+	public List<EmployeePayrollData> readEmployeeDataForDateRange(LocalDate startDate, LocalDate endDate) throws DBException {
+		String sql = String.format("select * from employee_payroll where start between '%s' and '%s';",
+									Date.valueOf(startDate), Date.valueOf(endDate));
+		return this.getEmplyoeePayrollDataUsingDB(sql);
+	}
+
+	private List<EmployeePayrollData> getEmplyoeePayrollDataUsingDB(String sql) throws DBException {
+		List<EmployeePayrollData> employeePayrollList = null;
+		try (Connection connection = this.establishConnection()) {
+			System.out.println("Connection is successfull!!! " + connection);
+			Statement statement = connection.createStatement();
+			ResultSet resultSet = statement.executeQuery(sql);
+			employeePayrollList = this.getEmplyoeePayrollDataUsingResultSet(resultSet);
+		} catch (SQLException e) {
+			throw new DBException("Cannot establish connection",DBException.ExceptionType.CONNECTION_FAIL);
+		}
+		return employeePayrollList;
+	}
+
+	private List<EmployeePayrollData> getEmplyoeePayrollDataUsingResultSet(ResultSet resultSet) throws DBException {
 		List<EmployeePayrollData> employeePayrollList = new ArrayList<EmployeePayrollData>();
 		try {
 			while (resultSet.next()) {
@@ -92,6 +101,7 @@ public class DatabaseIOService {
 	public int updateEmployeeData(String name, double salary) throws DBException {
 		return this.updateEmployeeDataUsingPreparedStatement(name, salary);
 	}
+
 	private int updateEmployeeDataUsingPreparedStatement(String name, double salary) throws DBException {
 		String sql = "update employee_payroll set salary = ? where name = ?";
 		try (Connection connection = this.establishConnection()){
@@ -103,9 +113,9 @@ public class DatabaseIOService {
 		} catch (SQLException e) {
 			throw new DBException("Cannot establish connection", DBException.ExceptionType.CONNECTION_FAIL);
 		}
-
 	}
-	
+
+	@SuppressWarnings("unused")
 	private int updateEmployeeDataUsingStatement(String name, double salary) throws DBException {
 		String sql = String.format("update employee_payroll set salary = %.2f where name = '%s'", salary, name);
 		try (Connection connection = this.establishConnection()) {
