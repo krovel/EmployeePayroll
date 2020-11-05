@@ -20,8 +20,7 @@ public class EmployeePayrollTest {
 
 		EmployeePayrollService payrollServiceObject = new EmployeePayrollService(Arrays.asList(arrayOfEmployees));
 		payrollServiceObject.writeEmployeeData(IOService.FILE_IO);
-		payrollServiceObject.printEmployeePayrollData();
-
+		payrollServiceObject.printEmployeePayrollData(IOService.FILE_IO);
 		Assert.assertEquals(3, payrollServiceObject.countEnteries(IOService.FILE_IO));
 	}
 
@@ -32,5 +31,15 @@ public class EmployeePayrollTest {
 		payrollServiceObject.readEmployeeData(IOService.FILE_IO);
 		int countOfEntriesRead = payrollServiceObject.sizeOfEmployeeList();
 		Assert.assertEquals(3, countOfEntriesRead);
+	}
+
+	@Test
+	public void givenEmployeePayrollInDB_WhenRetrieved_ShouldMatchEmployeeCount() {
+
+		EmployeePayrollService payrollServiceObject = new EmployeePayrollService();
+		payrollServiceObject.readEmployeeData(IOService.DB_IO);
+		int countOfEntriesRetrieved = payrollServiceObject.sizeOfEmployeeList();
+		payrollServiceObject.printEmployeePayrollData(IOService.DB_IO);
+		Assert.assertEquals(4, countOfEntriesRetrieved);
 	}
 }
