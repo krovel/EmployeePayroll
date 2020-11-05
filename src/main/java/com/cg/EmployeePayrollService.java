@@ -6,6 +6,7 @@ package com.cg;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class EmployeePayrollService {
@@ -62,6 +63,16 @@ public class EmployeePayrollService {
 				e.printStackTrace();
 			}
 		}
+		return null;
+	}
+
+	public Map<String, Double> readAverageSalaryByGender(IOService ioType) {
+		if (ioType.equals(IOService.DB_IO))
+			try {
+				return employeePayrollDBService.readAverageSalaryByGender();
+			} catch (DBException e) {
+				e.printStackTrace();
+			}
 		return null;
 	}
 
