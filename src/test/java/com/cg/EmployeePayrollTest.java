@@ -5,6 +5,7 @@ package com.cg;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import org.junit.Ignore;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,7 @@ import com.cg.EmployeePayrollService.IOService;
 
 public class EmployeePayrollTest {
 
+	@Ignore
 	@Test
 	public void given3EmployeesWhenWrittenToFileShouldMatchNumberOfEmployeeEntries() {
 		EmployeePayrollData[] arrayOfEmployees = {
@@ -28,6 +30,7 @@ public class EmployeePayrollTest {
 		Assert.assertEquals(3, payrollServiceObject.countEnteries(IOService.FILE_IO));
 	}
 
+	@Ignore
 	@Test
 	public void given3EmployeesWhenReadFromFileShouldMatchNumberOfEmployeeEntries() {
 
@@ -43,9 +46,9 @@ public class EmployeePayrollTest {
 		EmployeePayrollService payrollServiceObject = new EmployeePayrollService();
 		payrollServiceObject.readEmployeeData(IOService.DB_IO);
 		int countOfEntriesRetrieved = payrollServiceObject.sizeOfEmployeeList();
-		payrollServiceObject.printEmployeePayrollData(IOService.DB_IO);
-		Assert.assertEquals(4, countOfEntriesRetrieved);
+		Assert.assertEquals(3, countOfEntriesRetrieved);
 	}
+	
 	@Test
 	public void givenNewSalaryForEmployee_WhenUpdated_ShouldSyncWithDB() {
 		try {
@@ -59,6 +62,16 @@ public class EmployeePayrollTest {
 		}
 	}
 	
+	@Test
+	public void givenDateRange_WhenRetrieved_ShouldMatchEmployeeCount() {
+		EmployeePayrollService payrollServiceObject = new EmployeePayrollService();
+		payrollServiceObject.readEmployeeData(IOService.DB_IO);
+		LocalDate startDate = LocalDate.of(2019, 01, 01);
+		LocalDate endDate = LocalDate.now();
+		List<EmployeePayrollData> employeePayrollData = payrollServiceObject.readEmployeeDataForDateRange(IOService.DB_IO, startDate, endDate);
+		Assert.assertEquals(2, employeePayrollData.size());
+	}
+
 	@Test
 	public void givenPayrollDataInDB_WhenAverageSalaryRetrievedByGender_ShouldReturnProperValue() {
 		EmployeePayrollService payrollServiceObject = new EmployeePayrollService();

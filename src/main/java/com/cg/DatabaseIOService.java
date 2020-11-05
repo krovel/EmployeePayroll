@@ -13,6 +13,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
+import com.cg.EmployeePayrollData;
+
 public class DatabaseIOService {
 
 	private PreparedStatement employeePayrollDataStatement;
@@ -30,13 +33,18 @@ public class DatabaseIOService {
 	private Connection establishConnection() throws SQLException {
 		String jdbcURL = "jdbc:mysql://localhost:3306/payroll_service";
 		String userName = "root";
-		String password = "Matrixkashif@1";
+		String password = "First12@";
 		System.out.println("Establishing connection to database : " + jdbcURL);
 		return DriverManager.getConnection(jdbcURL, userName, password);
 	}
 
 	private void prepareStatementForEmployeeData() throws DBException {
-		String sql = "select * from employee_payroll where name = ?";
+		String sql = "select company.name as company_name, employee.id as employee_id, employee.name as employee_name, "
+					+ "employee.gender as gender, payroll.basic_pay as basic_pay "
+					+ "from employee "
+					+ "inner join company		on company.id = employee.company_id "
+					+ "inner join payroll		on payroll.employee_id = employee.id "
+					+ "where employee.name = ?;";
 		try {
 			Connection connection = this.establishConnection();
 			System.out.println("Connection is successfull!!! " + connection);
@@ -47,7 +55,10 @@ public class DatabaseIOService {
 	}
 
 	public List<EmployeePayrollData> readData() throws DBException {
-		String sql = "select * from employee_payroll;";
+		String sql ="select company.name as company_name, employee.id as employee_id, employee.name as employee_name, employee.gender as gender, payroll.basic_pay as basic_pay "
+				+ "from employee "
+				+ "inner join company		on company.id = employee.company_id "
+				+ "inner join payroll		on payroll.employee_id = employee.id; ";
 		return this.getEmplyoeePayrollDataUsingDB(sql);
 	}
 
@@ -60,14 +71,20 @@ public class DatabaseIOService {
 			ResultSet resultSet = employeePayrollDataStatement.executeQuery();
 			employeePayrollList = this.getEmplyoeePayrollDataUsingResultSet(resultSet);			
 		} catch (SQLException e) {
+			e.printStackTrace();
 			throw new DBException("Cannot execute query", DBException.ExceptionType.SQL_ERROR);
 		}
 		return employeePayrollList;
 	}
 
 	public List<EmployeePayrollData> readEmployeeDataForDateRange(LocalDate startDate, LocalDate endDate) throws DBException {
-		String sql = String.format("select * from employee_payroll where start between '%s' and '%s';",
-									Date.valueOf(startDate), Date.valueOf(endDate));
+		String sql = String.format("select company.name as company_name, employee.id as employee_id, employee.name as employee_name, employee.gender as gender, payroll.basic_pay as basic_pay "
+				+ "from employee "
+				+ "inner join company				on company.id = employee.company_id "
+				+ "inner join payroll				on payroll.employee_id = employee.id "
+				+ "where employee.id in "
+				+ "(select employee_id from employee_department "
+				+ "where start_date between '%s' and '%s');",Date.valueOf(startDate), Date.valueOf(endDate));
 		return this.getEmplyoeePayrollDataUsingDB(sql);
 	}
 
@@ -91,12 +108,14 @@ public class DatabaseIOService {
 
 	private List<EmployeePayrollData> getEmplyoeePayrollDataUsingDB(String sql) throws DBException {
 		List<EmployeePayrollData> employeePayrollList = null;
-		try (Connection connection = this.establishConnection()) {
+		try {
+			Connection connection = this.establishConnection();
 			System.out.println("Connection is successfull!!! " + connection);
 			Statement statement = connection.createStatement();
 			ResultSet resultSet = statement.executeQuery(sql);
 			employeePayrollList = this.getEmplyoeePayrollDataUsingResultSet(resultSet);
 		} catch (SQLException e) {
+			e.printStackTrace();
 			throw new DBException("Cannot establish connection",DBException.ExceptionType.CONNECTION_FAIL);
 		}
 		return employeePayrollList;
@@ -106,12 +125,37 @@ public class DatabaseIOService {
 		List<EmployeePayrollData> employeePayrollList = new ArrayList<EmployeePayrollData>();
 		try {
 			while (resultSet.next()) {
-				int id = resultSet.getInt("id");
-				String employeeName = resultSet.getString("name");
-				double salary = resultSet.getDouble("salary");
-				LocalDate startDate = resultSet.getDate("start").toLocalDate();
+
+				String companyName = resultSet.getString("company_name");
+				int id = resultSet.getInt("employee_id");
+				String employeeName = resultSet.getString("employee_name");
 				String gender = resultSet.getString("gender");
-				employeePayrollList.add(new EmployeePayrollData(id, employeeName, salary, startDate, gender));
+				double salary = resultSet.getDouble("basic_pay");
+				
+				List<LocalDate> startDateList = new ArrayList<>();
+				List<String> departmentNameList = new ArrayList<>();
+				List<String> phoneNumberList = new ArrayList<>();
+				try(Connection connection = this.establishConnection()){
+					String sql = String.format("select employee.id as employee_id, department.name as department_name , "
+											 + "employee_department.start_date as start_date "
+											 + "from employee "
+											 + "inner join employee_department	on employee.id = employee_department.employee_id "
+											 + "inner join department			on employee_department.department_id = department.id "
+											 + "where employee.id = %s;",id);
+					Statement statement = connection.createStatement();
+					ResultSet resultSetForDepartmentNameAndStartDate = statement.executeQuery(sql);
+					while(resultSetForDepartmentNameAndStartDate.next()) {
+						startDateList.add(resultSetForDepartmentNameAndStartDate.getDate("start_date").toLocalDate());
+						departmentNameList.add(resultSetForDepartmentNameAndStartDate.getString("department_name"));
+					}
+				}
+				try(Connection connection = this.establishConnection()){
+					String sql = String.format("select phone_number from employee_phone where employee_id = %s;", id);
+					Statement statement = connection.createStatement();
+					ResultSet resultSetForPhoneNumber = statement.executeQuery(sql);
+					while(resultSetForPhoneNumber.next()) phoneNumberList.add(resultSetForPhoneNumber.getString("phone_number"));
+				}				
+				employeePayrollList.add(new EmployeePayrollData(id, employeeName, salary, startDateList, gender, companyName, phoneNumberList, departmentNameList));
 			}
 		} catch (SQLException e) {
 			throw new DBException("Cannot populate employee payroll data", DBException.ExceptionType.RETRIEVE_ERROR);
@@ -124,7 +168,10 @@ public class DatabaseIOService {
 	}
 
 	private int updateEmployeeDataUsingPreparedStatement(String name, double salary) throws DBException {
-		String sql = "update employee_payroll set salary = ? where name = ?";
+		String sql = "update payroll set basic_pay = ? where employee_id = "
+				+ "(select employee.id "
+				+ "from employee "
+				+ "where name = ?);";
 		try (Connection connection = this.establishConnection()){
 			System.out.println("Connection is successfull!!! " + connection);
 			PreparedStatement employeePayrollUpdateStatement = connection.prepareStatement(sql);
@@ -138,7 +185,10 @@ public class DatabaseIOService {
 
 	@SuppressWarnings("unused")
 	private int updateEmployeeDataUsingStatement(String name, double salary) throws DBException {
-		String sql = String.format("update employee_payroll set salary = %.2f where name = '%s'", salary, name);
+		String sql = String.format("update payroll set basic_pay = %.2f where employee_id = "
+				+ "(select employee.id "
+				+ "from employee "
+				+ "where name = '%s');", salary, name);
 		try (Connection connection = this.establishConnection()) {
 			System.out.println("Connection is successfull!!! " + connection);
 			Statement statement = connection.createStatement();
@@ -148,7 +198,7 @@ public class DatabaseIOService {
 		}
 	}
 
-	public EmployeePayrollData addEmployeeToPayroll(String name, double salary, LocalDate startDate, String gender) throws DBException {
+	public EmployeePayrollData addEmployeeToPayroll(String employeeName, double salary, LocalDate startDate, String gender) throws DBException {
 		int employeeId = -1;
 		EmployeePayrollData newEmployeePayrollData = null;
 		Connection connection = null;
@@ -166,7 +216,7 @@ public class DatabaseIOService {
 		}
 		try (Statement statement = connection.createStatement()) {
 			String sql = String.format("insert into employee_payroll (name, gender, salary, start) values"
-									 + "('%s', '%s', %s, '%s')", name, gender, salary, Date.valueOf(startDate));
+									 + "('%s', '%s', %s, '%s')", employeeName, gender, salary, Date.valueOf(startDate));
 			int rowsUpdated = statement.executeUpdate(sql, statement.RETURN_GENERATED_KEYS);
 			if(rowsUpdated == 1) {
 				ResultSet resultSet = statement.getGeneratedKeys();
@@ -183,7 +233,7 @@ public class DatabaseIOService {
 									 + "(%s, %s, %s, %s)",employeeId, salary, deductions, incomeTax);
 			int rowsUpdated = statement.executeUpdate(sql);
 			if(rowsUpdated == 1) 
-				newEmployeePayrollData = new EmployeePayrollData(employeeId, name, salary, startDate, gender);				
+				newEmployeePayrollData = new EmployeePayrollData(employeeId, employeeName, salary, startDateList, gender, companyName, phoneNumberList, departmentNameList);
 		} catch (SQLException e) {
 			throw new DBException("Cannot establish connection", DBException.ExceptionType.STATEMENT_FAILURE);
 		}
