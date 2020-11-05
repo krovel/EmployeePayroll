@@ -69,8 +69,8 @@ public class EmployeePayrollService {
 	}
 
 	public boolean checkEmployeePayrollInSyncWithDB(String name) throws DBException {
-		EmployeePayrollData employeePayrollData = new DatabaseIOService().getEmplyoeePayrollData(name);
-		return employeePayrollData.equals(getEmployeePayrollData(name));
+		List<EmployeePayrollData> employeePayrollDataList = new DatabaseIOService().getEmplyoeePayrollData(name);
+		return employeePayrollDataList.get(0).equals(getEmployeePayrollData(name));
 	}
 
 	public void writeEmployeeData(IOService ioType) {
