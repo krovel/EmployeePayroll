@@ -41,15 +41,6 @@ public class EmployeePayrollTest {
 	}
 
 	@Test
-	public void givenEmployeePayrollInDB_WhenRetrieved_ShouldMatchEmployeeCount() {
-
-		EmployeePayrollService payrollServiceObject = new EmployeePayrollService();
-		payrollServiceObject.readEmployeeData(IOService.DB_IO);
-		int countOfEntriesRetrieved = payrollServiceObject.sizeOfEmployeeList();
-		Assert.assertEquals(3, countOfEntriesRetrieved);
-	}
-	
-	@Test
 	public void givenNewSalaryForEmployee_WhenUpdated_ShouldSyncWithDB() {
 		try {
 			EmployeePayrollService payrollServiceObject = new EmployeePayrollService();
@@ -86,11 +77,24 @@ public class EmployeePayrollTest {
 		try {
 			EmployeePayrollService payrollServiceObject = new EmployeePayrollService();
 			payrollServiceObject.readEmployeeData(IOService.DB_IO);
-			payrollServiceObject.addEmployeeToPayroll("Mark", 3000000.0, LocalDate.now(), "M");
+			payrollServiceObject.addEmployeeToPayroll("Mark", 3000000.0, LocalDate.now(), "M", "Oracle", "7896543214", "Research & Development");
 			boolean result = payrollServiceObject.checkEmployeePayrollInSyncWithDB("Mark");
 			Assert.assertTrue(result);
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Test
+	public void givenEmployeeName_WhenRemoved_ShouldRemoveEmployeeFromListAndDB() {
+		try {
+			EmployeePayrollService payrollServiceObject = new EmployeePayrollService();
+			payrollServiceObject.readEmployeeData(IOService.DB_IO);
+			payrollServiceObject.deleteEmployee("Mark");
+			boolean result = payrollServiceObject.isDeleted("Mark");	
+			Assert.assertTrue(result);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}			
 	}
 }

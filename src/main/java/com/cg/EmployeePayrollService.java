@@ -99,6 +99,13 @@ public class EmployeePayrollService {
 		return employeePayrollDataList.get(0).equals(getEmployeePayrollData(name));
 	}
 
+	public boolean isDeleted(String employeeName) throws DBException {
+		List<EmployeePayrollData> employeePayrollDataList = employeePayrollDBService.getEmplyoeePayrollDataUsingName(employeeName);
+		if(getEmployeePayrollData(employeeName) == null && employeePayrollDataList.size() == 0)
+			return true;
+		return false;
+	}
+
 	public void writeEmployeeData(IOService ioType) {
 		if (ioType.equals(IOService.CONSOLE_IO)) {
 			for (EmployeePayrollData o : employeePayrollList)
@@ -108,10 +115,17 @@ public class EmployeePayrollService {
 		}
 	}
 
-	public void addEmployeeToPayroll(String name, double salary, LocalDate startDate, String gender) {
+	public void addEmployeeToPayroll(String employeeName, double salary, LocalDate startDate, String gender, String companyName, String phoneNumber, String departmentName) {
 		try {
-			if(this.getEmployeePayrollData(name) == null)
-				this.employeePayrollList.add(employeePayrollDBService.addEmployeeToPayroll(name, salary, startDate, gender));
+			this.employeePayrollList.add(employeePayrollDBService.addEmployeeToPayroll(employeeName, salary, startDate, gender, companyName, phoneNumber, departmentName));
+		} catch (DBException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void deleteEmployee(String employeeName) {
+		try {
+			this.employeePayrollList = this.employeePayrollDBService.deleteEmployee(employeeName);
 		} catch (DBException e) {
 			e.printStackTrace();
 		}
