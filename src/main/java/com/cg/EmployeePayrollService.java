@@ -14,18 +14,18 @@ public class EmployeePayrollService {
 	}
 
 	public static final Scanner SC = new Scanner(System.in);
-	private List<EmployeePayrollData> employeeList;
+	private List<EmployeePayrollData> employeePayrollList;
 
 	public EmployeePayrollService() {
-		this.employeeList = new ArrayList<EmployeePayrollData>();
+		this.employeePayrollList = new ArrayList<EmployeePayrollData>();
 	}
 
 	public EmployeePayrollService(List<EmployeePayrollData> employeeList) {
-		this.employeeList = employeeList;
+		this.employeePayrollList = employeeList;
 	}
 
 	public int sizeOfEmployeeList() {
-		return this.employeeList.size();
+		return this.employeePayrollList.size();
 	}
 
 	public void readEmployeeData(IOService ioType) {
@@ -38,18 +38,24 @@ public class EmployeePayrollService {
 			System.out.println("Enter employee salary:");
 			double employeeSalary = SC.nextDouble();
 			EmployeePayrollData newEmployee = new EmployeePayrollData(employeeId, employeeName, employeeSalary);
-			employeeList.add(newEmployee);
-		} else if (ioType.equals(IOService.FILE_IO)) {
-			this.employeeList = new FileIOService().readData();
+			employeePayrollList.add(newEmployee);
+		} else if (ioType.equals(IOService.FILE_IO))
+			this.employeePayrollList = new FileIOService().readData();
+		else if (ioType.equals(IOService.DB_IO)) {
+			try {
+				this.employeePayrollList = new DatabaseIOService().readData();
+			} catch (DBException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
 	public void writeEmployeeData(IOService ioType) {
 		if (ioType.equals(IOService.CONSOLE_IO)) {
-			for (EmployeePayrollData o : employeeList)
+			for (EmployeePayrollData o : employeePayrollList)
 				System.out.println(o.toString());
 		} else if (ioType.equals(IOService.FILE_IO)) {
-			new FileIOService().writeData(employeeList);
+			new FileIOService().writeData(employeePayrollList);
 		}
 	}
 
@@ -59,7 +65,10 @@ public class EmployeePayrollService {
 		return 0;
 	}
 
-	public void printEmployeePayrollData() {
-		new FileIOService().printEmployeePayrolls();
+	public void printEmployeePayrollData(IOService ioType) {
+		if (ioType.equals(IOService.FILE_IO))
+			new FileIOService().printEmployeePayrolls();
+		else
+			this.employeePayrollList.stream().forEach(employeeData -> System.out.println(employeeData.toString()));
 	}
 }
