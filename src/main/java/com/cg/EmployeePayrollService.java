@@ -50,6 +50,29 @@ public class EmployeePayrollService {
 		}
 	}
 
+	public void updateEmployeeSalary(String name, double salary) throws DBException {
+		int result = new DatabaseIOService().updateEmployeeData(name, salary);
+		if(result == 0)
+			throw new DBException("Cannot update the employee payroll data", DBException.ExceptionType.UPDATE_ERROR);
+		EmployeePayrollData employeePayrollData = this.getEmployeePayrollData(name);
+		if(employeePayrollData != null)
+			employeePayrollData.setSalary(salary);
+		else
+			throw new DBException("Cannot find the employee payroll data", DBException.ExceptionType.INVALID_PAYROLL_DATA);
+	}
+
+	private EmployeePayrollData getEmployeePayrollData(String name) {
+		return this.employeePayrollList.stream()
+				   .filter(employeeData -> employeeData.getEmployeeName().equals(name))
+				   .findFirst()
+				   .orElse(null);
+	}
+
+	public boolean checkEmployeePayrollInSyncWithDB(String name) throws DBException {
+		EmployeePayrollData employeePayrollData = new DatabaseIOService().getEmplyoeePayrollData(name);
+		return employeePayrollData.equals(getEmployeePayrollData(name));
+	}
+
 	public void writeEmployeeData(IOService ioType) {
 		if (ioType.equals(IOService.CONSOLE_IO)) {
 			for (EmployeePayrollData o : employeePayrollList)
