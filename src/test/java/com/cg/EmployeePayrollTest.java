@@ -42,4 +42,16 @@ public class EmployeePayrollTest {
 		payrollServiceObject.printEmployeePayrollData(IOService.DB_IO);
 		Assert.assertEquals(4, countOfEntriesRetrieved);
 	}
+	@Test
+	public void givenNewSalaryForEmployee_WhenUpdated_ShouldSyncWithDB() {
+		try {
+			EmployeePayrollService payrollServiceObject = new EmployeePayrollService();
+			payrollServiceObject.readEmployeeData(IOService.DB_IO);
+			payrollServiceObject.updateEmployeeSalary("Terisa", 3000000.0);
+			boolean result = payrollServiceObject.checkEmployeePayrollInSyncWithDB("Teresa");
+			Assert.assertTrue(result);
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }
