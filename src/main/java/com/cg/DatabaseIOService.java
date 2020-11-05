@@ -30,7 +30,7 @@ public class DatabaseIOService {
 	private Connection establishConnection() throws SQLException {
 		String jdbcURL = "jdbc:mysql://localhost:3306/payroll_service";
 		String userName = "root";
-		String password = "First12@";
+		String password = "Matrixkashif@1";
 		System.out.println("Establishing connection to database : " + jdbcURL);
 		return DriverManager.getConnection(jdbcURL, userName, password);
 	}
