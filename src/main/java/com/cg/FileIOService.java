@@ -6,7 +6,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class FileIOService {
 	public static final String PAYROLL_FILE_NAME = "employee-payroll-file.txt";
 
@@ -48,7 +47,7 @@ public class FileIOService {
 				String[] data = line.split("[ a-zA-Z]+ : ");
 				int id = Character.getNumericValue(data[1].charAt(0));
 				String name = data[2];
-				double salary = Double.parseDouble(data[3]);
+				double salary = Double.parseDouble(data[4]);
 				EmployeePayrollData employeeobject = new EmployeePayrollData(id, name, salary);
 				employeeReadList.add(employeeobject);
 			});
