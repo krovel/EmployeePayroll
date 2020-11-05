@@ -110,7 +110,8 @@ public class DatabaseIOService {
 				String employeeName = resultSet.getString("name");
 				double salary = resultSet.getDouble("salary");
 				LocalDate startDate = resultSet.getDate("start").toLocalDate();
-				employeePayrollList.add(new EmployeePayrollData(id, employeeName, salary, startDate));
+				String gender = resultSet.getString("gender");
+				employeePayrollList.add(new EmployeePayrollData(id, employeeName, salary, startDate, gender));
 			}
 		} catch (SQLException e) {
 			throw new DBException("Cannot populate employee payroll data", DBException.ExceptionType.RETRIEVE_ERROR);
@@ -145,5 +146,27 @@ public class DatabaseIOService {
 		} catch (SQLException e) {
 			throw new DBException("Cannot establish connection", DBException.ExceptionType.CONNECTION_FAIL);
 		}
+	}
+
+	public EmployeePayrollData addEmployeeToPayroll(String name, double salary, LocalDate startDate, String gender) throws DBException {
+		int employeeId = -1;
+		EmployeePayrollData newEmployeePayrollData = null;
+		String sql = String.format("insert into employee_payroll (name, gender, salary, start) values"
+								 + "('%s', '%s', %s, '%s')", name, gender, salary, Date.valueOf(startDate));
+		try (Connection connection = this.establishConnection()) {
+			System.out.println("Connection is successfull!!! " + connection);
+			Statement statement = connection.createStatement();
+			int rowsUpdated = statement.executeUpdate(sql, statement.RETURN_GENERATED_KEYS);
+			if(rowsUpdated == 1) {
+				ResultSet resultSet = statement.getGeneratedKeys();
+				System.out.println("Generated Key : "+statement.getGeneratedKeys());
+				if(resultSet.next())
+					employeeId = resultSet.getInt(1);
+			}
+			newEmployeePayrollData = new EmployeePayrollData(employeeId, name, salary, startDate, gender);
+		}catch (SQLException e) {
+			throw new DBException("Cannot establish connection", DBException.ExceptionType.CONNECTION_FAIL);
+		}
+		return newEmployeePayrollData;
 	}
 }

@@ -58,21 +58,26 @@ public class EmployeePayrollTest {
 			e.printStackTrace();
 		}
 	}
-	@Test
-	public void givenDateRange_WhenRetrieved_ShouldMatchEmployeeCount() {
-		EmployeePayrollService payrollServiceObject = new EmployeePayrollService();
-		payrollServiceObject.readEmployeeData(IOService.DB_IO);
-		LocalDate startDate = LocalDate.of(2019, 01, 01);
-		LocalDate endDate = LocalDate.now();
-		List<EmployeePayrollData> employeePayrollData = payrollServiceObject.readEmployeeDataForDateRange(IOService.DB_IO, startDate, endDate);
-		Assert.assertEquals(3, employeePayrollData.size());
-	}
+	
 	@Test
 	public void givenPayrollDataInDB_WhenAverageSalaryRetrievedByGender_ShouldReturnProperValue() {
 		EmployeePayrollService payrollServiceObject = new EmployeePayrollService();
 		payrollServiceObject.readEmployeeData(IOService.DB_IO);
 		Map<String, Double> averageSalaryByGender = payrollServiceObject.readAverageSalaryByGender(IOService.DB_IO);
-		Assert.assertTrue(averageSalaryByGender.get("M").equals(1500000.0) && 
+		Assert.assertTrue(averageSalaryByGender.get("M").equals(2000000.0) && 
 						  averageSalaryByGender.get("F").equals(3000000.0));
+	}
+
+	@Test
+	public void givenNewEmployee_WhenAdded_ShouldSyncWithDB() {
+		try {
+			EmployeePayrollService payrollServiceObject = new EmployeePayrollService();
+			payrollServiceObject.readEmployeeData(IOService.DB_IO);
+			payrollServiceObject.addEmployeeToPayroll("Mark", 3000000.0, LocalDate.now(), "M");
+			boolean result = payrollServiceObject.checkEmployeePayrollInSyncWithDB("Mark");
+			Assert.assertTrue(result);
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
