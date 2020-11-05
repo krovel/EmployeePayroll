@@ -9,7 +9,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DatabaseIOService {
 
@@ -67,6 +69,24 @@ public class DatabaseIOService {
 		String sql = String.format("select * from employee_payroll where start between '%s' and '%s';",
 									Date.valueOf(startDate), Date.valueOf(endDate));
 		return this.getEmplyoeePayrollDataUsingDB(sql);
+	}
+
+	public Map<String, Double> readAverageSalaryByGender() throws DBException {
+		String sql = "select gender, avg(salary) as average_salary from employee_payroll group by gender;";
+		Map<String, Double> genderToAverageSalaryMap = new HashMap<>();
+		try (Connection connection = this.establishConnection()) {
+			System.out.println("Connection is successfull!!! " + connection);
+			Statement statement = connection.createStatement();
+			ResultSet resultSet = statement.executeQuery(sql);
+			while (resultSet.next()) {
+				String gender = resultSet.getString("gender");
+				double averageSalary = resultSet.getDouble("average_salary");
+				genderToAverageSalaryMap.put(gender, averageSalary);
+			}
+		} catch (SQLException e) {
+			throw new DBException("Cannot establish connection",DBException.ExceptionType.CONNECTION_FAIL);
+		}
+		return genderToAverageSalaryMap;
 	}
 
 	private List<EmployeePayrollData> getEmplyoeePayrollDataUsingDB(String sql) throws DBException {
