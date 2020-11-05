@@ -3,12 +3,34 @@
  */
 package com.cg;
 
+import java.util.Arrays;
+import org.junit.Assert;
 import org.junit.Test;
 
-import com.cg.EmployeePayrollService;
-
-import static org.junit.Assert.*;
+import com.cg.EmployeePayrollService.IOService;
 
 public class EmployeePayrollTest {
-    
+
+	@Test
+	public void given3EmployeesWhenWrittenToFileShouldMatchNumberOfEmployeeEntries() {
+		EmployeePayrollData[] arrayOfEmployees = {
+				new EmployeePayrollData(1, "Mohd Kashif", 800000.0),
+				new EmployeePayrollData(2, "Ahmad Kidwai", 850000.0),
+				new EmployeePayrollData(3, "Abdul Qadir", 900000.0) };
+
+		EmployeePayrollService payrollServiceObject = new EmployeePayrollService(Arrays.asList(arrayOfEmployees));
+		payrollServiceObject.writeEmployeeData(IOService.FILE_IO);
+		payrollServiceObject.printEmployeePayrollData();
+
+		Assert.assertEquals(3, payrollServiceObject.countEnteries(IOService.FILE_IO));
+	}
+
+	@Test
+	public void given3EmployeesWhenReadFromFileShouldMatchNumberOfEmployeeEntries() {
+
+		EmployeePayrollService payrollServiceObject = new EmployeePayrollService();
+		payrollServiceObject.readEmployeeData(IOService.FILE_IO);
+		int countOfEntriesRead = payrollServiceObject.sizeOfEmployeeList();
+		Assert.assertEquals(3, countOfEntriesRead);
+	}
 }
