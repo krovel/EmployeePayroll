@@ -151,21 +151,36 @@ public class DatabaseIOService {
 	public EmployeePayrollData addEmployeeToPayroll(String name, double salary, LocalDate startDate, String gender) throws DBException {
 		int employeeId = -1;
 		EmployeePayrollData newEmployeePayrollData = null;
-		String sql = String.format("insert into employee_payroll (name, gender, salary, start) values"
-								 + "('%s', '%s', %s, '%s')", name, gender, salary, Date.valueOf(startDate));
-		try (Connection connection = this.establishConnection()) {
+		Connection connection = null;
+		try {
+			connection = this.establishConnection();
 			System.out.println("Connection is successfull!!! " + connection);
-			Statement statement = connection.createStatement();
+		} catch (SQLException e) {
+			throw new DBException("Cannot establish connection", DBException.ExceptionType.CONNECTION_FAIL);
+		}
+		try (Statement statement = connection.createStatement()) {
+			String sql = String.format("insert into employee_payroll (name, gender, salary, start) values"
+									 + "('%s', '%s', %s, '%s')", name, gender, salary, Date.valueOf(startDate));
 			int rowsUpdated = statement.executeUpdate(sql, statement.RETURN_GENERATED_KEYS);
 			if(rowsUpdated == 1) {
 				ResultSet resultSet = statement.getGeneratedKeys();
-				System.out.println("Generated Key : "+statement.getGeneratedKeys());
 				if(resultSet.next())
 					employeeId = resultSet.getInt(1);
 			}
 			newEmployeePayrollData = new EmployeePayrollData(employeeId, name, salary, startDate, gender);
-		}catch (SQLException e) {
-			throw new DBException("Cannot establish connection", DBException.ExceptionType.CONNECTION_FAIL);
+		} catch (SQLException e) {
+			throw new DBException("Cannot establish connection", DBException.ExceptionType.STATEMENT_FAILURE);
+		}
+		try (Statement statement = connection.createStatement()) {
+			double deductions = salary * 0.2;
+			double incomeTax = (salary - deductions)* 0.1;
+			String sql = String.format("insert into payroll (employee_id, basic_pay, deductions, income_tax) values"
+									 + "(%s, %s, %s, %s)",employeeId, salary, deductions, incomeTax);
+			int rowsUpdated = statement.executeUpdate(sql);
+			if(rowsUpdated == 1) 
+				newEmployeePayrollData = new EmployeePayrollData(employeeId, name, salary, startDate, gender);				
+		} catch (SQLException e) {
+			throw new DBException("Cannot establish connection", DBException.ExceptionType.STATEMENT_FAILURE);
 		}
 		return newEmployeePayrollData;
 	}
