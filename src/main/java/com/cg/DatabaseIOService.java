@@ -154,9 +154,15 @@ public class DatabaseIOService {
 		Connection connection = null;
 		try {
 			connection = this.establishConnection();
+			connection.setAutoCommit(false);
 			System.out.println("Connection is successfull!!! " + connection);
 		} catch (SQLException e) {
-			throw new DBException("Cannot establish connection", DBException.ExceptionType.CONNECTION_FAIL);
+			try {
+				connection.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+			throw new DBException("Cannot establish connection", DBException.ExceptionType.CONNECTION_FAIL);			
 		}
 		try (Statement statement = connection.createStatement()) {
 			String sql = String.format("insert into employee_payroll (name, gender, salary, start) values"
@@ -167,7 +173,6 @@ public class DatabaseIOService {
 				if(resultSet.next())
 					employeeId = resultSet.getInt(1);
 			}
-			newEmployeePayrollData = new EmployeePayrollData(employeeId, name, salary, startDate, gender);
 		} catch (SQLException e) {
 			throw new DBException("Cannot establish connection", DBException.ExceptionType.STATEMENT_FAILURE);
 		}
@@ -181,6 +186,19 @@ public class DatabaseIOService {
 				newEmployeePayrollData = new EmployeePayrollData(employeeId, name, salary, startDate, gender);				
 		} catch (SQLException e) {
 			throw new DBException("Cannot establish connection", DBException.ExceptionType.STATEMENT_FAILURE);
+		}
+		try {
+			connection.commit();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			if (connection != null) {
+				try {
+					connection.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 		return newEmployeePayrollData;
 	}
